@@ -67,14 +67,6 @@ export const PhonePeDepositModal: React.FC<PhonePeDepositModalProps> = ({
     setErrorMsg('');
   };
 
-  const handleFillDemoUtr = () => {
-    // Generate a realistic 12-digit UPI reference number
-    const randomDigits = Math.floor(100000000000 + Math.random() * 900000000000).toString();
-    setUtrNumber(randomDigits);
-    setErrorMsg('');
-    sound.playClick();
-  };
-
   const handleSubmitDeposit = (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMsg('');
@@ -352,15 +344,8 @@ export const PhonePeDepositModal: React.FC<PhonePeDepositModalProps> = ({
 
               {/* Step 2: Enter UTR / Transaction ID */}
               <div>
-                <label className="block text-xs font-bold uppercase tracking-wider text-slate-300 mb-1.5 flex items-center justify-between">
-                  <span>{isHi ? '2. PhonePe UTR / ट्रांजैक्शन आई.डी.:' : '2. PhonePe UTR / Reference ID:'}</span>
-                  <button
-                    type="button"
-                    onClick={handleFillDemoUtr}
-                    className="text-[11px] text-amber-400 hover:text-amber-300 underline font-normal lowercase"
-                  >
-                    {isHi ? '⚡ डेमो UTR भरें' : '⚡ Auto-fill demo UTR'}
-                  </button>
+                <label className="block text-xs font-bold uppercase tracking-wider text-slate-300 mb-1.5">
+                  {isHi ? '2. PhonePe UTR / ट्रांजैक्शन आई.डी.:' : '2. PhonePe UTR / Reference ID:'}
                 </label>
                 <input
                   id="input-deposit-utr"

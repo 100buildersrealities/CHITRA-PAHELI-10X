@@ -20,7 +20,7 @@ export const StatsBar: React.FC<StatsBarProps> = ({ stats, language }) => {
         </div>
         <div>
           <div className="text-[10px] uppercase font-bold text-slate-400">
-            {isHi ? '10X जीतें' : '10X Wins'}
+            {isHi ? '2X जीतें' : '2X Wins'}
           </div>
           <div className="text-base font-black text-white font-mono">
             {stats.gamesWon} / {stats.gamesPlayed}

@@ -99,8 +99,8 @@ export const GameOverModal: React.FC<GameOverModalProps> = ({
               <RotateCcw className="w-4 h-4" />
               <span>
                 {isHi
-                  ? `फिर से खेलें (₹${bet} शर्त - 10X जीतें)`
-                  : `Try Again (Bet ₹${bet} - Win 10X)`}
+                  ? `फिर से खेलें (₹${bet} शर्त - 2X जीतें)`
+                  : `Try Again (Bet ₹${bet} - Win 2X)`}
               </span>
             </button>
           ) : (

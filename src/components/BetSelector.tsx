@@ -24,7 +24,7 @@ export const BetSelector: React.FC<BetSelectorProps> = ({
   language,
 }) => {
   const isHi = language === 'hi';
-  const potentialWin = currentBet * 10;
+  const potentialWin = currentBet * 2;
   const canAfford = walletBalance >= currentBet && currentBet > 0;
 
   return (
@@ -41,15 +41,15 @@ export const BetSelector: React.FC<BetSelectorProps> = ({
         <div>
           <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-500/10 border border-amber-500/30 text-amber-300 text-xs font-bold mb-1">
             <Sparkles className="w-3.5 h-3.5 text-amber-400" />
-            {isHi ? '10 गुना जैकपॉट चैलेंज' : '10X Jackpot Challenge'}
+            {isHi ? '2 गुना ईनाम चैलेंज (2X Payout)' : '2X Multiplier Challenge'}
           </div>
           <h2 className="text-xl sm:text-2xl font-black text-white tracking-tight">
             {isHi ? 'अपनी शर्त (Bet) चुनें' : 'Select Your Bet Amount'}
           </h2>
           <p className="text-xs text-slate-400 mt-0.5">
             {isHi
-              ? 'इस लेवल पर जितने पैसे लगाएंगे, 30 सेकंड में जीतने पर उसका सीधा 10 गुना मिलेगा!'
-              : 'Wager your coins: Solve the 30-second scrambled puzzle to win exactly 10X!'}
+              ? '30 सेकंड के भीतर चित्र सही करने पर शर्त का सीधा 2 गुना (जैसे ₹50 लगाने पर ₹100) मिलेगा!'
+              : 'Solve puzzle within 30 seconds to win 2X of your bet (e.g. ₹50 wager returns ₹100)!'}
           </p>
         </div>
 
@@ -75,18 +75,18 @@ export const BetSelector: React.FC<BetSelectorProps> = ({
         </div>
       </div>
 
-      {/* 10X Multiplier Banner Highlight */}
+      {/* 2X Multiplier Banner Highlight */}
       <div className="my-5 p-4 rounded-2xl bg-gradient-to-r from-amber-950/60 via-yellow-950/40 to-slate-900 border border-amber-500/40 flex flex-col sm:flex-row items-center justify-between gap-4">
         <div className="flex items-center gap-3">
           <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-amber-400 to-yellow-600 flex items-center justify-center text-slate-950 font-black text-2xl shadow-lg shadow-amber-500/30">
-            10X
+            2X
           </div>
           <div>
             <div className="text-xs font-bold uppercase tracking-wider text-amber-300">
               {isHi ? 'विजेता पुरस्कार (Winning Payout)' : 'Winning Payout'}
             </div>
             <div className="text-xs text-slate-400">
-              {isHi ? 'लगाए गए पैसे × 10 गुना' : 'Wagered Coins × 10 Multiplier'}
+              {isHi ? 'लगाई गई शर्त का सीधा 2 गुना (जैसे ₹50 पर ₹100)' : 'Direct 2X of wagered bet (e.g. ₹50 ➔ ₹100)'}
             </div>
           </div>
         </div>
@@ -131,7 +131,7 @@ export const BetSelector: React.FC<BetSelectorProps> = ({
                     isSelected ? 'text-slate-900 font-bold' : 'text-amber-400/80'
                   }`}
                 >
-                  Win ₹{preset * 10}
+                  Win ₹{preset * 2}
                 </span>
               </button>
             );
@@ -210,8 +210,8 @@ export const BetSelector: React.FC<BetSelectorProps> = ({
 
           <p className="text-xs text-slate-300 mb-3">
             {isHi
-              ? 'गेम में बने रहने के लिए PhonePe (9981228006) से ₹100 से ₹1,000 डिपॉजिट करें और 10X जैकपॉट जीतना जारी रखें!'
-              : 'Deposit ₹100 to ₹1,000 via PhonePe (9981228006) to continue playing and winning 10X!'}
+              ? 'गेम में बने रहने के लिए PhonePe (9981228006) से ₹100 से ₹1,000 डिपॉजिट करें और 2X ईनाम जीतना जारी रखें!'
+              : 'Deposit ₹100 to ₹1,000 via PhonePe (9981228006) to continue playing and winning 2X!'}
           </p>
 
           <button

@@ -59,12 +59,12 @@ export const RulesGuideModal: React.FC<RulesGuideModalProps> = ({ onClose, langu
             </div>
             <div>
               <h4 className="font-bold text-amber-400 text-sm">
-                {isHi ? '2. शर्त का 10 गुना ईनाम (10X Multiplier)' : '2. 10X Cash Return On Win'}
+                {isHi ? '2. शर्त का सीधा 2 गुना ईनाम (2X Multiplier)' : '2. 2X Direct Return On Fast Win'}
               </h4>
               <p className="text-slate-400 mt-0.5">
                 {isHi
-                  ? 'शुरुआत में अपनी इच्छानुसार शर्त (उदा. ₹50) लगाएं। 30 सेकंड में जीतने पर आपको लगाए गए पैसे का 10 गुना (₹500) सीधा मिलेगा!'
-                  : 'Wager your desired coins (e.g. ₹50). Solving the puzzle in 30s pays 10X your wager (₹500)!'}
+                  ? '30 सेकंड के भीतर चित्र सही करने पर लगाई गई शर्त का सीधा 2 गुना (जैसे ₹50 लगाने पर ₹100) वॉलेट में जुड़ता है और कंफेटी/सिक्कों की बारिश होती है।'
+                  : 'Solving the puzzle correctly within 30 seconds doubles your wagered bet directly into your wallet (e.g. ₹50 wager wins ₹100) with a celebration of coins and confetti shower!'}
               </p>
             </div>
           </div>
@@ -76,12 +76,12 @@ export const RulesGuideModal: React.FC<RulesGuideModalProps> = ({ onClose, langu
             </div>
             <div>
               <h4 className="font-bold text-white text-sm">
-                {isHi ? '3. स्तर बढ़ने के साथ कठिनाई' : '3. Increasing Difficulty'}
+                {isHi ? '3. 1 से 100 स्तरों की क्रमिक कठिनाई' : '3. 100 Progressive Difficulty Levels'}
               </h4>
               <p className="text-slate-400 mt-0.5">
                 {isHi
-                  ? 'शुरुआती स्तर सरल (2x2 ग्रिड = 4 टुकड़े) होंगे। आगे 3x3, 4x4 और 5x5 ग्रिड आएंगे और टुकड़े उल्टे-सीधे (रोटेटेड) भी मिलेंगे।'
-                  : 'Begins with simple 2x2 grids (4 pieces). Progresses to 3x3, 4x4, 5x5 with inverted and rotated tiles.'}
+                  ? 'शुरुआती स्तर सरल (2x2 ग्रिड = 4 टुकड़े) होंगे। आगे 3x3, 4x4 और 5x5 ग्रिड तक कुल 100 लेवल्स की क्रमिक चुनौती है, जिसमें टुकड़े उल्टे-सीधे (रोटेटेड ↺) भी मिलेंगे।'
+                  : 'Begins with simple 2x2 grids (4 pieces), scaling progressively through 3x3, 4x4, and 5x5 grids across 100 levels with rotated tiles ↺ up to the Level 100 finale!'}
               </p>
             </div>
           </div>

@@ -143,16 +143,6 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({
     onLoginSuccess(user);
   };
 
-  // Quick Demo fill helper
-  const handleFillDemo = () => {
-    setRegName('राहुल शर्मा');
-    setRegMobile('9876543210');
-    setRegStep(2);
-    setRegPin('1234');
-    setRegConfirmPin('1234');
-    setErrorMsg('');
-  };
-
   return (
     <div className="min-h-screen bg-slate-950 flex flex-col justify-between p-4 sm:p-6 text-slate-100">
       {/* Top Bar for Language Toggle */}
@@ -482,18 +472,6 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({
               </button>
             </form>
           )}
-
-          {/* Quick Demo Pre-fill button for easy testing */}
-          <div className="mt-5 pt-4 border-t border-slate-800 text-center">
-            <button
-              id="btn-demo-autofill"
-              type="button"
-              onClick={handleFillDemo}
-              className="text-xs text-amber-400/80 hover:text-amber-300 underline font-medium cursor-pointer"
-            >
-              {isHi ? '⚡ एक-क्लिक डेमो जानकारी भरें (Auto-Fill Demo)' : '⚡ Auto-Fill Demo Registration'}
-            </button>
-          </div>
         </div>
       </div>
 

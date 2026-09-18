@@ -228,7 +228,7 @@ export default function App() {
       if (allCorrect) {
         const elapsed = Math.max(0.5, 30.0 - timeLeft);
         setTimeTaken(elapsed);
-        const payout = currentBet * 10;
+        const payout = currentBet * 2;
 
         setWalletBalance((prev) => prev + payout);
         setGameState('WON');
@@ -557,8 +557,8 @@ export default function App() {
         <div className="max-w-5xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-2">
           <span>
             {isHi
-              ? 'चित्र पहेली 10X - 30 सेकंड में उल्टे-सीधे चित्रों को सुलझाएं और 10 गुना जीतें'
-              : 'Chitra Paheli 10X - Solve scrambled picture puzzles in 30 seconds & win 10X!'}
+              ? 'चित्र पहेली 10X - 30 सेकंड में चित्र सही करने पर शर्त का सीधा 2 गुना जीतें'
+              : 'Chitra Paheli 10X - Solve picture puzzles in 30 seconds & win 2X!'}
           </span>
           <div className="flex items-center gap-3">
             <button

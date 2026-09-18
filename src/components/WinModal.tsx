@@ -1,8 +1,9 @@
 import React, { useEffect } from 'react';
 import confetti from 'canvas-confetti';
-import { Trophy, Sparkles, ArrowRight, RotateCcw, Clock, Award } from 'lucide-react';
+import { Trophy, Sparkles, ArrowRight, RotateCcw, Clock, Award, Coins, CheckCircle2 } from 'lucide-react';
 import { Language, LevelConfig } from '../types';
 import { sound } from '../utils/audio';
+import { CoinShower } from './CoinShower';
 
 interface WinModalProps {
   bet: number;
@@ -24,28 +25,38 @@ export const WinModal: React.FC<WinModalProps> = ({
   language,
 }) => {
   const isHi = language === 'hi';
-  const payout = bet * 10;
+  const payout = bet * 2;
 
   useEffect(() => {
     sound.playWin10X();
 
-    // Launch celebratory confetti bursts
-    const end = Date.now() + 2.5 * 1000;
-    const colors = ['#f59e0b', '#fbbf24', '#10b981', '#38bdf8', '#ffffff'];
+    // Launch celebratory confetti bursts and continuous stream
+    const end = Date.now() + 3.5 * 1000;
+    const colors = ['#f59e0b', '#fbbf24', '#ffd700', '#10b981', '#38bdf8', '#ffffff'];
+
+    // Initial big burst from center-top
+    confetti({
+      particleCount: 60,
+      spread: 90,
+      origin: { x: 0.5, y: 0.3 },
+      colors,
+      gravity: 0.9,
+      scalar: 1.2,
+    });
 
     const frame = () => {
       confetti({
-        particleCount: 4,
+        particleCount: 3,
         angle: 60,
-        spread: 55,
-        origin: { x: 0, y: 0.7 },
+        spread: 60,
+        origin: { x: 0, y: 0.65 },
         colors,
       });
       confetti({
-        particleCount: 4,
+        particleCount: 3,
         angle: 120,
-        spread: 55,
-        origin: { x: 1, y: 0.7 },
+        spread: 60,
+        origin: { x: 1, y: 0.65 },
         colors,
       });
 
@@ -57,44 +68,56 @@ export const WinModal: React.FC<WinModalProps> = ({
   }, []);
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md animate-in fade-in duration-300">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/85 backdrop-blur-md animate-in fade-in duration-300">
+      {/* Falling Coins & Confetti Shower */}
+      <CoinShower durationMs={6000} />
+
       <div
         id="win-celebration-modal"
-        className="relative max-w-md w-full bg-slate-900 border-2 border-amber-500/80 rounded-3xl p-6 sm:p-7 text-center shadow-2xl shadow-amber-500/30 overflow-hidden"
+        className="relative max-w-md w-full bg-slate-900/95 border-2 border-amber-400/90 rounded-3xl p-6 sm:p-7 text-center shadow-2xl shadow-amber-500/40 overflow-hidden z-50 backdrop-blur-xl"
       >
         {/* Glow halo */}
-        <div className="absolute -top-20 -left-20 w-48 h-48 bg-amber-500/20 rounded-full blur-3xl pointer-events-none" />
-        <div className="absolute -bottom-20 -right-20 w-48 h-48 bg-yellow-500/20 rounded-full blur-3xl pointer-events-none" />
+        <div className="absolute -top-20 -left-20 w-52 h-52 bg-amber-500/25 rounded-full blur-3xl pointer-events-none" />
+        <div className="absolute -bottom-20 -right-20 w-52 h-52 bg-yellow-500/25 rounded-full blur-3xl pointer-events-none" />
 
         {/* Icon & Badge */}
-        <div className="relative mx-auto w-20 h-20 mb-4 flex items-center justify-center">
-          <div className="absolute inset-0 rounded-full bg-gradient-to-tr from-amber-500 to-yellow-300 animate-ping opacity-25" />
+        <div className="relative mx-auto w-20 h-20 mb-3 flex items-center justify-center">
+          <div className="absolute inset-0 rounded-2xl bg-gradient-to-tr from-amber-500 to-yellow-300 animate-ping opacity-20" />
           <div className="w-20 h-20 rounded-2xl bg-gradient-to-tr from-amber-500 to-yellow-300 flex items-center justify-center shadow-xl shadow-amber-500/40 text-slate-950">
             <Trophy className="w-10 h-10 stroke-[2.5]" />
           </div>
         </div>
 
-        <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/40 text-xs font-bold mb-2">
+        {/* 2X Multiplier Badge */}
+        <div className="inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/40 text-xs font-bold mb-2">
           <Sparkles className="w-3.5 h-3.5 text-amber-400" />
-          {isHi ? 'शानदार जीत! 10X जैकपॉट' : 'Victory! 10X Jackpot'}
+          <span>{isHi ? '30 सेकंड्स में जीत! सीधा 2 गुना ईनाम' : 'Fast Solve in 30s! 2X Multiplier Win'}</span>
         </div>
 
         <h3 className="text-2xl sm:text-3xl font-black text-white tracking-tight">
-          {isHi ? 'बधाई हो! आपने चित्र बना लिया!' : 'Puzzle Solved in Time!'}
+          {isHi ? 'बधाई हो! चित्र सही हो गया!' : 'Puzzle Solved in Time!'}
         </h3>
         <p className="text-xs text-slate-300 mt-1">
           {isHi
-            ? `आपने केवल ${timeTaken.toFixed(1)} सेकंड में पूरा चित्र सही कर दिया!`
+            ? `आपने केवल ${timeTaken.toFixed(1)} सेकंड में चित्र पूरा कर दिया!`
             : `Completed within ${timeTaken.toFixed(1)} seconds!`}
         </p>
 
-        {/* 10X Payout showcase */}
-        <div className="my-5 p-4 rounded-2xl bg-gradient-to-b from-amber-950/60 to-slate-950 border border-amber-500/50">
-          <div className="text-xs font-bold uppercase tracking-wider text-amber-400 mb-1">
-            {isHi ? 'कुल प्राप्त राशि (10 गुणा)' : 'Total Received (10X Multiplier)'}
+        {/* 2X Payout showcase */}
+        <div className="my-4 p-4 rounded-2xl bg-gradient-to-b from-amber-950/70 via-slate-900 to-slate-950 border border-amber-500/60 shadow-lg">
+          <div className="flex items-center justify-center gap-1.5 text-xs font-bold uppercase tracking-wider text-amber-400 mb-1">
+            <Coins className="w-4 h-4 text-amber-300" />
+            <span>{isHi ? 'वॉलेट में जुड़ी राशि (शर्त का सीधा 2 गुना)' : 'Added to Wallet (Direct 2X Multiplier)'}</span>
           </div>
+
           <div className="text-3xl sm:text-4xl font-black text-amber-300 font-mono flex items-center justify-center gap-2">
             <span>+₹{payout.toLocaleString('en-IN')}</span>
+          </div>
+
+          <div className="mt-1 text-[11px] text-amber-200/90 font-medium">
+            {isHi
+              ? `(₹${bet} लगाने पर सीधा ₹${payout} वॉलेट में जुड़ा)`
+              : `(Wagered ₹${bet} ➔ ₹${payout} added to your wallet)`}
           </div>
 
           <div className="mt-3 pt-3 border-t border-slate-800 grid grid-cols-2 gap-2 text-xs text-slate-400">
@@ -116,6 +139,12 @@ export const WinModal: React.FC<WinModalProps> = ({
           </div>
         </div>
 
+        {/* Coin & Confetti celebration note */}
+        <div className="mb-4 flex items-center justify-center gap-2 text-[11px] text-emerald-400 bg-emerald-950/40 border border-emerald-500/30 rounded-xl py-1.5 px-3">
+          <CheckCircle2 className="w-3.5 h-3.5 shrink-0" />
+          <span>{isHi ? 'सिक्कों और कंफेटी की बारिश जारी है!' : 'Celebratory coin & confetti rain active!'}</span>
+        </div>
+
         {/* Action buttons */}
         <div className="flex flex-col gap-2.5">
           {hasNextLevel ? (
@@ -129,9 +158,13 @@ export const WinModal: React.FC<WinModalProps> = ({
               <ArrowRight className="w-4 h-4" />
             </button>
           ) : (
-            <div className="p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-300 text-xs font-semibold flex items-center justify-center gap-1.5">
-              <Award className="w-4 h-4" />
-              {isHi ? 'अद्भुत! आपने सभी लेवल पार कर लिए हैं!' : 'Master! You have beat all levels!'}
+            <div className="p-3.5 rounded-2xl bg-gradient-to-r from-amber-500/20 to-yellow-400/20 border border-amber-500/40 text-amber-300 text-xs font-bold flex items-center justify-center gap-2 shadow-lg">
+              <Award className="w-5 h-5 text-amber-400" />
+              <span>
+                {isHi
+                  ? 'अद्भुत! आपने सभी 100 लेवल पूरे कर लिए हैं! आप ग्रैंड चैंपियन हैं!'
+                  : 'Grand Champion! You have conquered all 100 levels!'}
+              </span>
             </div>
           )}
 

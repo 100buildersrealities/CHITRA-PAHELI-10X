@@ -1,6 +1,6 @@
 {
   "name": "Chitra Paheli 10X - 30s Puzzle Challenge",
-  "description": "30 सेकंड में उल्टे-सीधे चित्रों को सही क्रम में जोड़ें, लेवल पार करें और लगाए गए पैसे का 10 गुना जीतें!",
+  "description": "30 सेकंड के भीतर चित्र सही करने पर लगाई गई शर्त का सीधा 2 गुना जीतें, 100 क्रमिक लेवल पार करें और कंफेटी/सिक्कों की बारिश का आनंद लें!",
   "requestFramePermissions": [],
   "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
 }
