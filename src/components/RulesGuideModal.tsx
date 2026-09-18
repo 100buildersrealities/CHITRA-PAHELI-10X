@@ -116,8 +116,8 @@ export const RulesGuideModal: React.FC<RulesGuideModalProps> = ({ onClose, langu
               </h4>
               <p className="text-slate-300 mt-0.5">
                 {isHi
-                  ? 'रजिस्ट्रेशन पूरा होते ही खिलाड़ी को गेम शुरू करने के लिए ₹50 का वेलकम बोनस प्राप्त होता है। अगर खिलाड़ी वेलकम बोनस हार जाता है, तो वह गेम में बने रहने के लिए PhonePe नंबर 9981228006 अथवा UPI ID: 9981228006-2@axl पर ₹100 से ₹1,000 देकर रियल गेम खेल सकता है।'
-                  : 'Upon completing registration, players receive a ₹50 Welcome Bonus to start the game. If the welcome bonus is lost, players can continue playing the real game by depositing ₹100 to ₹1,000 via PhonePe number 9981228006 or UPI ID: 9981228006-2@axl.'}
+                  ? 'रजिस्ट्रेशन पूरा होते ही खिलाड़ी को गेम शुरू करने के लिए ₹50 का वेलकम बोनस प्राप्त होता है। अगर खिलाड़ी वेलकम बोनस हार जाता है, तो गेम में बने रहने के लिए PhonePe या UPI (9981228006-2@axl) पर ₹100 से ₹1,000 पेमेंट करने के बाद अपनी जमा राशि का स्क्रीनशॉट अपलोड करें और WhatsApp (9981228006) पर भेजें। उसके बाद ही डिपॉजिट सत्यापित होगी।'
+                  : 'Upon registration, players receive ₹50 Welcome Bonus. If exhausted, continue the real game by depositing ₹100 to ₹1,000 via PhonePe or UPI (9981228006-2@axl), uploading payment screenshot, and sending to WhatsApp (9981228006) for verification.'}
               </p>
             </div>
           </div>

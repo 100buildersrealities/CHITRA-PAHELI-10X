@@ -30,8 +30,10 @@ export interface DepositRecord {
   utr: string;
   phonePeNumber: string;
   upiId?: string;
+  screenshotUrl?: string;
+  screenshotName?: string;
   timestamp: number;
-  status: 'SUCCESS';
+  status: 'PENDING_VERIFICATION' | 'VERIFIED' | 'SUCCESS';
 }
 
 export interface UserAccount {

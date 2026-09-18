@@ -210,8 +210,8 @@ export const BetSelector: React.FC<BetSelectorProps> = ({
 
           <p className="text-xs text-slate-300 mb-3">
             {isHi
-              ? 'गेम में बने रहने के लिए PhonePe (9981228006) से ₹100 से ₹1,000 डिपॉजिट करें और 2X ईनाम जीतना जारी रखें!'
-              : 'Deposit ₹100 to ₹1,000 via PhonePe (9981228006) to continue playing and winning 2X!'}
+              ? 'गेम में बने रहने के लिए PhonePe या UPI (9981228006-2@axl) से ₹100-₹1,000 डिपॉजिट करें, स्क्रीनशॉट अपलोड / WhatsApp (9981228006) पर भेजें और 2X ईनाम जीतना जारी रखें!'
+              : 'Deposit ₹100 to ₹1,000 via PhonePe/UPI (9981228006-2@axl), upload screenshot or WhatsApp (9981228006) for verification to keep winning 2X!'}
           </p>
 
           <button

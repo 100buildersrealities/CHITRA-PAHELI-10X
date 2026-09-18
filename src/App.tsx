@@ -12,7 +12,7 @@ import { StatsBar } from './components/StatsBar';
 import { AuthScreen } from './components/AuthScreen';
 import { PhonePeDepositModal } from './components/PhonePeDepositModal';
 import { GAME_LEVELS } from './utils/levels';
-import { Language, LevelConfig, PuzzlePiece, GameState, GameStats, UserAccount } from './types';
+import { Language, LevelConfig, PuzzlePiece, GameState, GameStats, UserAccount, DepositRecord } from './types';
 import { sound } from './utils/audio';
 
 const STORAGE_KEY_USERS = 'chitra_10x_registered_users';
@@ -388,19 +388,26 @@ export default function App() {
   };
 
   // Handle PhonePe deposit completion
-  const handleDepositSuccess = (amount: number, utr: string) => {
+  const handleDepositSuccess = (
+    amount: number,
+    utr: string,
+    screenshotUrl?: string,
+    screenshotName?: string
+  ) => {
     sound.playWin10X();
     setWalletBalance((prev) => {
       const newBal = prev + amount;
       if (currentUser) {
-        const newDeposit = {
+        const newDeposit: DepositRecord = {
           id: `DEP-${Date.now()}`,
           amount,
           utr,
           phonePeNumber: '9981228006',
           upiId: '9981228006-2@axl',
+          screenshotUrl,
+          screenshotName,
           timestamp: Date.now(),
-          status: 'SUCCESS' as const,
+          status: 'VERIFIED',
         };
         const updatedDeposits = [...(currentUser.deposits || []), newDeposit];
         const updatedUser: UserAccount = {
