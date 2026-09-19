@@ -2,23 +2,35 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Navbar } from './components/Navbar';
 import { TimerBar } from './components/TimerBar';
 import { BetSelector } from './components/BetSelector';
-import { GameBoard } from './components/GameBoard';
+import { KbcGameBoard } from './components/KbcGameBoard';
 import { WinModal } from './components/WinModal';
 import { GameOverModal } from './components/GameOverModal';
-import { ImagePreviewModal } from './components/ImagePreviewModal';
 import { RulesGuideModal } from './components/RulesGuideModal';
 import { LevelSelector } from './components/LevelSelector';
 import { StatsBar } from './components/StatsBar';
 import { AuthScreen } from './components/AuthScreen';
 import { PhonePeDepositModal } from './components/PhonePeDepositModal';
-import { GAME_LEVELS } from './utils/levels';
-import { Language, LevelConfig, PuzzlePiece, GameState, GameStats, UserAccount, DepositRecord } from './types';
+import { WithdrawModal } from './components/WithdrawModal';
+import { GAME_LEVELS, generateUnique100Levels, getReplacementQuestion } from './utils/kbcQuestions';
+import {
+  Language,
+  LevelConfig,
+  GameState,
+  GameStats,
+  UserAccount,
+  DepositRecord,
+  WithdrawalRecord,
+} from './types';
 import { sound } from './utils/audio';
 
-const STORAGE_KEY_USERS = 'chitra_10x_registered_users';
-const STORAGE_KEY_ACTIVE_USER = 'chitra_10x_active_user';
-const STORAGE_KEY_LANG = 'chitra_10x_lang';
-const STORAGE_KEY_SOUND = 'chitra_10x_sound';
+const STORAGE_KEY_USERS = 'kbc_100x_registered_users';
+const STORAGE_KEY_ACTIVE_USER = 'kbc_100x_active_user';
+const STORAGE_KEY_LANG = 'kbc_100x_lang';
+const STORAGE_KEY_SOUND = 'kbc_100x_sound';
+
+// Migration keys for backward compatibility
+const LEGACY_STORAGE_KEY_USERS = 'chitra_10x_registered_users';
+const LEGACY_STORAGE_KEY_ACTIVE_USER = 'chitra_10x_active_user';
 
 export default function App() {
   // Settings & Preferences
@@ -33,7 +45,7 @@ export default function App() {
 
   // User Accounts & Authentication State
   const [registeredUsers, setRegisteredUsers] = useState<UserAccount[]>(() => {
-    const saved = localStorage.getItem(STORAGE_KEY_USERS);
+    const saved = localStorage.getItem(STORAGE_KEY_USERS) || localStorage.getItem(LEGACY_STORAGE_KEY_USERS);
     if (saved) {
       try {
         return JSON.parse(saved);
@@ -45,7 +57,8 @@ export default function App() {
   });
 
   const [currentUser, setCurrentUser] = useState<UserAccount | null>(() => {
-    const saved = localStorage.getItem(STORAGE_KEY_ACTIVE_USER);
+    const saved =
+      localStorage.getItem(STORAGE_KEY_ACTIVE_USER) || localStorage.getItem(LEGACY_STORAGE_KEY_ACTIVE_USER);
     if (saved) {
       try {
         return JSON.parse(saved);
@@ -66,15 +79,24 @@ export default function App() {
   });
 
   const [currentLevelIndex, setCurrentLevelIndex] = useState<number>(0);
-  const [customLevel, setCustomLevel] = useState<LevelConfig | null>(null);
+
+  // Dynamic 100 Progressive Levels (always 100% unique KBC questions across all 100 levels)
+  const [levels, setLevels] = useState<LevelConfig[]>(() => {
+    if (currentUser?.activeLevels && currentUser.activeLevels.length === 100) {
+      return currentUser.activeLevels;
+    }
+    return generateUnique100Levels(currentUser?.seenQuestionIds || []);
+  });
+
+  // Active level config
+  const activeLevel: LevelConfig = levels[currentLevelIndex] || levels[0] || GAME_LEVELS[0];
 
   // Betting & Game Loop
   const [currentBet, setCurrentBet] = useState<number>(20);
   const [gameState, setGameState] = useState<GameState>('BETTING');
+  const [gameOverReason, setGameOverReason] = useState<'wrong' | 'timeout'>('timeout');
   const [timeLeft, setTimeLeft] = useState<number>(30.0);
   const [timeTaken, setTimeTaken] = useState<number>(0);
-  const [movesCount, setMovesCount] = useState<number>(0);
-  const [pieces, setPieces] = useState<PuzzlePiece[]>([]);
 
   // Statistics
   const [stats, setStats] = useState<GameStats>(() => {
@@ -91,12 +113,9 @@ export default function App() {
   });
 
   // Modals
-  const [showPeekModal, setShowPeekModal] = useState<boolean>(false);
   const [showRulesModal, setShowRulesModal] = useState<boolean>(false);
   const [showDepositModal, setShowDepositModal] = useState<boolean>(false);
-
-  // Active level config
-  const activeLevel: LevelConfig = customLevel || GAME_LEVELS[currentLevelIndex] || GAME_LEVELS[0];
+  const [showWithdrawModal, setShowWithdrawModal] = useState<boolean>(false);
 
   // Save registered users list
   useEffect(() => {
@@ -111,6 +130,7 @@ export default function App() {
         walletBalance,
         highestUnlockedLevel,
         stats,
+        activeLevels: levels,
       };
       localStorage.setItem(STORAGE_KEY_ACTIVE_USER, JSON.stringify(updatedUser));
 
@@ -121,7 +141,7 @@ export default function App() {
     } else {
       localStorage.removeItem(STORAGE_KEY_ACTIVE_USER);
     }
-  }, [walletBalance, highestUnlockedLevel, stats]);
+  }, [walletBalance, highestUnlockedLevel, stats, levels]);
 
   useEffect(() => {
     localStorage.setItem(STORAGE_KEY_LANG, language);
@@ -132,29 +152,54 @@ export default function App() {
     sound.enabled = soundEnabled;
   }, [soundEnabled]);
 
-  // Handle new account registration
+  // Handle new account registration: gets ₹50 Welcome Bonus and fresh 100 levels
   const handleRegisterAccount = (newUser: UserAccount) => {
+    const freshLevels = generateUnique100Levels([]);
+    const userWithLevels: UserAccount = {
+      ...newUser,
+      activeLevels: freshLevels,
+      seenQuestionIds: [],
+    };
     setRegisteredUsers((prev) => {
-      const filtered = prev.filter((u) => u.mobile !== newUser.mobile);
-      return [...filtered, newUser];
+      const filtered = prev.filter((u) => u.mobile !== userWithLevels.mobile);
+      return [...filtered, userWithLevels];
     });
   };
 
-  // Handle successful login
+  // Handle successful login: automatically generate fresh 100 unique levels without repeating questions
   const handleLoginSuccess = (user: UserAccount) => {
-    setCurrentUser(user);
+    const freshLevels = generateUnique100Levels(user.seenQuestionIds || []);
+    setLevels(freshLevels);
+
+    const updatedUser: UserAccount = {
+      ...user,
+      activeLevels: freshLevels,
+    };
+    setCurrentUser(updatedUser);
     setWalletBalance(user.walletBalance);
     setHighestUnlockedLevel(user.highestUnlockedLevel);
-    setStats(user.stats || {
-      gamesPlayed: 0,
-      gamesWon: 0,
-      totalWon: 0,
-      highestPayout: 0,
-      bestTime: 0,
-    });
+    setStats(
+      user.stats || {
+        gamesPlayed: 0,
+        gamesWon: 0,
+        totalWon: 0,
+        highestPayout: 0,
+        bestTime: 0,
+      }
+    );
     setGameState('BETTING');
     setTimeLeft(30.0);
-    setCurrentLevelIndex(Math.min(user.highestUnlockedLevel, GAME_LEVELS.length - 1));
+    setCurrentLevelIndex(Math.min(user.highestUnlockedLevel, freshLevels.length - 1));
+  };
+
+  // Refresh fresh set of 100 unique levels manually
+  const handleRefreshUniqueLevels = () => {
+    const freshLevels = generateUnique100Levels(currentUser?.seenQuestionIds || []);
+    setLevels(freshLevels);
+    if (currentUser) {
+      setCurrentUser((prev) => (prev ? { ...prev, activeLevels: freshLevels } : null));
+    }
+    sound.playClick();
   };
 
   // Handle logout
@@ -166,90 +211,6 @@ export default function App() {
     localStorage.removeItem(STORAGE_KEY_ACTIVE_USER);
     setGameState('BETTING');
   };
-
-  // Generate scrambled puzzle pieces
-  const generatePieces = useCallback((level: LevelConfig): PuzzlePiece[] => {
-    const total = level.gridSize * level.gridSize;
-    const initial: PuzzlePiece[] = [];
-
-    for (let i = 0; i < total; i++) {
-      initial.push({
-        id: i,
-        currentPos: i,
-        correctPos: i,
-        rotation: 0,
-        row: Math.floor(i / level.gridSize),
-        col: i % level.gridSize,
-      });
-    }
-
-    // Shuffle slot positions
-    const positions = Array.from({ length: total }, (_, idx) => idx);
-    let isSame = true;
-
-    // Ensure at least 80% pieces are misplaced
-    while (isSame) {
-      for (let i = positions.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [positions[i], positions[j]] = [positions[j], positions[i]];
-      }
-      let matches = 0;
-      for (let i = 0; i < total; i++) {
-        if (positions[i] === i) matches++;
-      }
-      if (matches <= Math.floor(total * 0.25)) {
-        isSame = false;
-      }
-    }
-
-    // Assign positions and random rotations if level has rotation
-    const rotationOptions = [0, 90, 180, 270];
-
-    return initial.map((p, idx) => {
-      let rot = 0;
-      if (level.hasRotation) {
-        rot = rotationOptions[Math.floor(Math.random() * rotationOptions.length)];
-      }
-      return {
-        ...p,
-        currentPos: positions[idx],
-        rotation: rot,
-      };
-    });
-  }, []);
-
-  // Check victory condition
-  const checkWin = useCallback(
-    (currentPieces: PuzzlePiece[], level: LevelConfig) => {
-      const allCorrect = currentPieces.every(
-        (p) => p.currentPos === p.id && (!level.hasRotation || p.rotation % 360 === 0)
-      );
-
-      if (allCorrect) {
-        const elapsed = Math.max(0.5, 30.0 - timeLeft);
-        setTimeTaken(elapsed);
-        const payout = currentBet * 2;
-
-        setWalletBalance((prev) => prev + payout);
-        setGameState('WON');
-
-        // Unlock next level
-        if (currentLevelIndex >= highestUnlockedLevel && currentLevelIndex < GAME_LEVELS.length - 1) {
-          setHighestUnlockedLevel(currentLevelIndex + 1);
-        }
-
-        // Update stats
-        setStats((prev) => ({
-          gamesPlayed: prev.gamesPlayed + 1,
-          gamesWon: prev.gamesWon + 1,
-          totalWon: prev.totalWon + payout,
-          highestPayout: Math.max(prev.highestPayout, payout),
-          bestTime: prev.bestTime === 0 ? elapsed : Math.min(prev.bestTime, elapsed),
-        }));
-      }
-    },
-    [currentBet, timeLeft, currentLevelIndex, highestUnlockedLevel]
-  );
 
   // Timer reference & loop
   const timerRef = useRef<number | null>(null);
@@ -267,7 +228,7 @@ export default function App() {
 
         setTimeLeft(remaining);
 
-        // Sound ticks
+        // Sound ticks in last 10 seconds
         const currentSec = Math.floor(remaining);
         if (currentSec !== lastTickSec && currentSec <= 10 && currentSec > 0) {
           lastTickSec = currentSec;
@@ -277,11 +238,7 @@ export default function App() {
         if (remaining <= 0) {
           if (timerRef.current) clearInterval(timerRef.current);
           setTimeLeft(0);
-          setGameState('LOST');
-          setStats((prev) => ({
-            ...prev,
-            gamesPlayed: prev.gamesPlayed + 1,
-          }));
+          handleTimeExpired();
         }
       }, 50);
 
@@ -293,7 +250,7 @@ export default function App() {
     }
   }, [gameState]);
 
-  // Start the 30s challenge
+  // Start the KBC 30s challenge
   const handleStartGame = () => {
     if (walletBalance < currentBet) return;
 
@@ -301,77 +258,98 @@ export default function App() {
     // Deduct bet from balance
     setWalletBalance((prev) => prev - currentBet);
 
-    const newPieces = generatePieces(activeLevel);
-    setPieces(newPieces);
     setTimeLeft(30.0);
-    setMovesCount(0);
     setGameState('PLAYING');
   };
 
-  // Swap pieces between two grid slot indices
-  const handleSwapPieces = (slotIndexA: number, slotIndexB: number) => {
-    if (gameState !== 'PLAYING') return;
+  // Handle Answer Submission from KbcGameBoard
+  const handleAnswerSubmit = (selectedIndex: number, isCorrect: boolean) => {
+    if (timerRef.current) clearInterval(timerRef.current);
 
-    setPieces((prev) => {
-      const pieceA = prev.find((p) => p.currentPos === slotIndexA);
-      const pieceB = prev.find((p) => p.currentPos === slotIndexB);
+    const questionId = activeLevel.question.id;
 
-      if (!pieceA || !pieceB) return prev;
-
-      sound.playSwap();
-      setMovesCount((m) => m + 1);
-
-      const updated = prev.map((p) => {
-        if (p.id === pieceA.id) {
-          return { ...p, currentPos: slotIndexB };
+    // Track seen question so it's never repeated for this user
+    if (currentUser) {
+      setCurrentUser((prev) => {
+        if (!prev) return null;
+        const seen = prev.seenQuestionIds || [];
+        if (!seen.includes(questionId)) {
+          return { ...prev, seenQuestionIds: [...seen, questionId] };
         }
-        if (p.id === pieceB.id) {
-          return { ...p, currentPos: slotIndexA };
-        }
-        return p;
+        return prev;
       });
+    }
 
-      // If either piece is placed correctly, chime!
-      const aIsCorrect = pieceA.id === slotIndexB && (!activeLevel.hasRotation || pieceA.rotation % 360 === 0);
-      const bIsCorrect = pieceB.id === slotIndexA && (!activeLevel.hasRotation || pieceB.rotation % 360 === 0);
-      if (aIsCorrect || bIsCorrect) {
-        sound.playCorrectTile();
+    if (isCorrect) {
+      const elapsed = Math.max(0.5, 30.0 - timeLeft);
+      setTimeTaken(elapsed);
+      const payout = currentBet * 2;
+
+      setWalletBalance((prev) => prev + payout);
+      setGameState('WON');
+
+      // Unlock next level
+      if (currentLevelIndex >= highestUnlockedLevel && currentLevelIndex < levels.length - 1) {
+        setHighestUnlockedLevel(currentLevelIndex + 1);
       }
 
-      // Check win condition
-      checkWin(updated, activeLevel);
-      return updated;
-    });
+      // Update stats
+      setStats((prev) => ({
+        gamesPlayed: prev.gamesPlayed + 1,
+        gamesWon: prev.gamesWon + 1,
+        totalWon: prev.totalWon + payout,
+        highestPayout: Math.max(prev.highestPayout, payout),
+        bestTime: prev.bestTime === 0 ? elapsed : Math.min(prev.bestTime, elapsed),
+      }));
+    } else {
+      setGameOverReason('wrong');
+      setGameState('LOST');
+      setStats((prev) => ({
+        ...prev,
+        gamesPlayed: prev.gamesPlayed + 1,
+      }));
+    }
   };
 
-  // Rotate piece by 90 degrees
-  const handleRotatePiece = (pieceId: number) => {
-    if (gameState !== 'PLAYING') return;
-
-    sound.playRotate();
-    setPieces((prev) => {
-      const updated = prev.map((p) => {
-        if (p.id === pieceId) {
-          return { ...p, rotation: (p.rotation + 90) % 360 };
+  // Handle 30s timeout
+  const handleTimeExpired = () => {
+    const questionId = activeLevel.question.id;
+    if (currentUser) {
+      setCurrentUser((prev) => {
+        if (!prev) return null;
+        const seen = prev.seenQuestionIds || [];
+        if (!seen.includes(questionId)) {
+          return { ...prev, seenQuestionIds: [...seen, questionId] };
         }
-        return p;
+        return prev;
       });
+    }
 
-      const rotatedPiece = updated.find((p) => p.id === pieceId);
-      if (rotatedPiece && rotatedPiece.currentPos === rotatedPiece.id && rotatedPiece.rotation === 0) {
-        sound.playCorrectTile();
-      }
+    setGameOverReason('timeout');
+    setGameState('LOST');
+    setStats((prev) => ({
+      ...prev,
+      gamesPlayed: prev.gamesPlayed + 1,
+    }));
+  };
 
-      checkWin(updated, activeLevel);
-      return updated;
-    });
+  // Handle Flip Question lifeline
+  const handleFlipQuestion = () => {
+    const currentQ = activeLevel.question;
+    const tier = currentQ.difficultyTier;
+    const excludeIds = [currentQ.id, ...(currentUser?.seenQuestionIds || [])];
+    const replacement = getReplacementQuestion(tier, excludeIds);
+
+    // Update level question
+    setLevels((prev) =>
+      prev.map((lvl, idx) => (idx === currentLevelIndex ? { ...lvl, question: replacement } : lvl))
+    );
   };
 
   // Advance to next level
   const handleNextLevel = () => {
-    if (currentLevelIndex < GAME_LEVELS.length - 1) {
+    if (currentLevelIndex < levels.length - 1) {
       setCurrentLevelIndex((prev) => prev + 1);
-      setCustomLevel(null);
     }
     setGameState('BETTING');
   };
@@ -425,33 +403,40 @@ export default function App() {
     });
   };
 
+  // Handle PhonePe / GPay / UPI Withdrawal completion
+  const handleWithdrawSuccess = (record: WithdrawalRecord) => {
+    setWalletBalance((prev) => {
+      const newBal = Math.max(0, prev - record.amount);
+      if (currentUser) {
+        const updatedWithdrawals = [...(currentUser.withdrawals || []), record];
+        const updatedUser: UserAccount = {
+          ...currentUser,
+          walletBalance: newBal,
+          withdrawals: updatedWithdrawals,
+        };
+        setCurrentUser(updatedUser);
+        localStorage.setItem(STORAGE_KEY_ACTIVE_USER, JSON.stringify(updatedUser));
+        setRegisteredUsers((prevUsers) =>
+          prevUsers.map((u) => (u.mobile === updatedUser.mobile ? updatedUser : u))
+        );
+      }
+      return newBal;
+    });
+  };
+
   // Reset progress
   const handleResetProgress = () => {
     if (confirm(language === 'hi' ? 'क्या आप लेवल और आंकड़े रीसेट करना चाहते हैं?' : 'Reset game progress?')) {
+      const freshLevels = generateUnique100Levels([]);
+      setLevels(freshLevels);
       setHighestUnlockedLevel(0);
       setCurrentLevelIndex(0);
-      setWalletBalance(500);
-      setCustomLevel(null);
+      setWalletBalance(50);
       setGameState('BETTING');
+      if (currentUser) {
+        setCurrentUser((prev) => (prev ? { ...prev, activeLevels: freshLevels, seenQuestionIds: [] } : null));
+      }
     }
-  };
-
-  // Upload custom picture
-  const handleCustomImageUpload = (dataUrl: string) => {
-    const customConfig: LevelConfig = {
-      id: 999,
-      titleHi: 'मेरी कस्टम तस्वीर',
-      titleEn: 'My Custom Picture',
-      categoryHi: 'अपलोड की गई फोटो',
-      categoryEn: 'Uploaded Photo',
-      gridSize: 3,
-      hasRotation: true,
-      difficultyHi: '3x3 + उल्टे टुकड़े ↺',
-      difficultyEn: '3x3 + Rotations ↺',
-      imageUrl: dataUrl,
-    };
-    setCustomLevel(customConfig);
-    setGameState('BETTING');
   };
 
   const isHi = language === 'hi';
@@ -477,13 +462,14 @@ export default function App() {
         onLogout={handleLogout}
         walletBalance={walletBalance}
         currentLevelIndex={currentLevelIndex}
-        totalLevels={GAME_LEVELS.length}
+        totalLevels={levels.length}
         language={language}
         onLanguageToggle={() => setLanguage((l) => (l === 'hi' ? 'en' : 'hi'))}
         soundEnabled={soundEnabled}
         onSoundToggle={() => setSoundEnabled((s) => !s)}
         onOpenHelp={() => setShowRulesModal(true)}
         onOpenDeposit={() => setShowDepositModal(true)}
+        onOpenWithdraw={() => setShowWithdrawModal(true)}
         onClaimBonus={handleClaimBonus}
         onResetProgress={handleResetProgress}
       />
@@ -506,14 +492,13 @@ export default function App() {
 
             {/* Level Selector Carousel */}
             <LevelSelector
-              levels={GAME_LEVELS}
-              currentLevelIndex={customLevel ? -1 : currentLevelIndex}
+              levels={levels}
+              currentLevelIndex={currentLevelIndex}
               highestUnlockedLevel={highestUnlockedLevel}
               onSelectLevel={(idx) => {
                 setCurrentLevelIndex(idx);
-                setCustomLevel(null);
               }}
-              onCustomImageUpload={handleCustomImageUpload}
+              onRefreshUniqueLevels={handleRefreshUniqueLevels}
               language={language}
             />
 
@@ -529,31 +514,33 @@ export default function App() {
             <div className="flex flex-wrap items-center justify-between gap-2 px-1 text-xs text-slate-400">
               <div className="flex items-center gap-2">
                 <span className="font-bold text-white text-sm">
-                  {isHi ? activeLevel.titleHi : activeLevel.titleEn}
+                  {isHi ? activeLevel.question.categoryHi : activeLevel.question.categoryEn}
                 </span>
                 <span className="px-2 py-0.5 rounded-full bg-slate-800 text-amber-400 font-mono font-semibold">
-                  {activeLevel.gridSize}x{activeLevel.gridSize} ({activeLevel.gridSize * activeLevel.gridSize} {isHi ? 'टुकड़े' : 'pcs'})
+                  {activeLevel.prizeTag}
                 </span>
               </div>
 
               <div className="flex items-center gap-2">
-                <span>{isHi ? 'शर्त:' : 'Bet:'} <strong className="text-white font-mono">₹{currentBet}</strong></span>
-                <span className="text-amber-400 font-bold bg-amber-500/10 px-2 py-0.5 rounded-full border border-amber-500/30">
-                  {isHi ? '10X जीत: ' : '10X Payout: '}₹{currentBet * 10}
+                <span>
+                  {isHi ? 'शर्त:' : 'Bet:'} <strong className="text-white font-mono">₹{currentBet}</strong>
+                </span>
+                <span className="text-amber-400 font-bold bg-amber-500/10 px-2.5 py-0.5 rounded-full border border-amber-500/30">
+                  {isHi ? '2X जीत: ' : '2X Payout: '}₹{currentBet * 2}
                 </span>
               </div>
             </div>
 
-            {/* Interactive Puzzle Grid */}
-            <GameBoard
-              pieces={pieces}
-              gridSize={activeLevel.gridSize}
+            {/* Interactive KBC Quiz Game Board with 4 Options and Lifelines */}
+            <KbcGameBoard
               level={activeLevel}
-              onSwapPieces={handleSwapPieces}
-              onRotatePiece={handleRotatePiece}
-              onPeekOriginal={() => setShowPeekModal(true)}
+              timeLeft={timeLeft}
+              totalTime={30.0}
+              currentBet={currentBet}
+              onAnswerSubmit={handleAnswerSubmit}
+              onTimeExpired={handleTimeExpired}
               language={language}
-              movesCount={movesCount}
+              onFlipQuestion={handleFlipQuestion}
             />
           </div>
         )}
@@ -564,8 +551,8 @@ export default function App() {
         <div className="max-w-5xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-2">
           <span>
             {isHi
-              ? 'चित्र पहेली 10X - 30 सेकंड में चित्र सही करने पर शर्त का सीधा 2 गुना जीतें'
-              : 'Chitra Paheli 10X - Solve picture puzzles in 30 seconds & win 2X!'}
+              ? 'कौन बनेगा करोड़पति 100X - 100 क्रमिक लेवल, 4 विकल्प, 30 सेकंड टाइमर व PhonePe/GPay निकासी'
+              : 'KBC 100X Quiz - 100 Progressive Levels, 4 Options, 30s Timer & PhonePe/GPay Withdrawals'}
           </span>
           <div className="flex items-center gap-3">
             <button
@@ -573,6 +560,13 @@ export default function App() {
               className="text-amber-400/80 hover:text-amber-300 underline cursor-pointer"
             >
               {isHi ? 'गेम के नियम' : 'Rules'}
+            </button>
+            <span>•</span>
+            <button
+              onClick={() => setShowWithdrawModal(true)}
+              className="text-emerald-400 hover:text-emerald-300 underline cursor-pointer"
+            >
+              {isHi ? 'पैसे निकालें (PhonePe/GPay)' : 'Withdraw Cash'}
             </button>
             <span>•</span>
             <button
@@ -591,9 +585,10 @@ export default function App() {
           bet={currentBet}
           timeTaken={timeTaken}
           level={activeLevel}
-          hasNextLevel={currentLevelIndex < GAME_LEVELS.length - 1}
+          hasNextLevel={currentLevelIndex < levels.length - 1}
           onNextLevel={handleNextLevel}
           onReplay={handleReplay}
+          onOpenWithdraw={() => setShowWithdrawModal(true)}
           language={language}
         />
       )}
@@ -603,18 +598,11 @@ export default function App() {
           bet={currentBet}
           walletBalance={walletBalance}
           level={activeLevel}
+          reason={gameOverReason}
           onRetry={handleStartGame}
           onBackToBetting={() => setGameState('BETTING')}
           onOpenDeposit={() => setShowDepositModal(true)}
           onClaimBonus={handleClaimBonus}
-          language={language}
-        />
-      )}
-
-      {showPeekModal && (
-        <ImagePreviewModal
-          level={activeLevel}
-          onClose={() => setShowPeekModal(false)}
           language={language}
         />
       )}
@@ -632,6 +620,16 @@ export default function App() {
         onClose={() => setShowDepositModal(false)}
         currentUser={currentUser}
         onDepositSuccess={handleDepositSuccess}
+        language={language}
+      />
+
+      {/* PhonePe / GPay / UPI Withdrawal Modal */}
+      <WithdrawModal
+        isOpen={showWithdrawModal}
+        onClose={() => setShowWithdrawModal(false)}
+        currentUser={currentUser}
+        walletBalance={walletBalance}
+        onWithdrawSuccess={handleWithdrawSuccess}
         language={language}
       />
     </div>

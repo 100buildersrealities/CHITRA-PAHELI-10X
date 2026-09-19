@@ -48,28 +48,30 @@ export const BetSelector: React.FC<BetSelectorProps> = ({
           </h2>
           <p className="text-xs text-slate-400 mt-0.5">
             {isHi
-              ? '30 सेकंड के भीतर चित्र सही करने पर शर्त का सीधा 2 गुना (जैसे ₹50 लगाने पर ₹100) मिलेगा!'
-              : 'Solve puzzle within 30 seconds to win 2X of your bet (e.g. ₹50 wager returns ₹100)!'}
+              ? '30 सेकंड के भीतर सही उत्तर लॉक करने पर लगाई गई शर्त का सीधा 2 गुना (जैसे ₹50 लगाने पर ₹100) मिलेगा!'
+              : 'Lock the correct answer within 30 seconds to win 2X of your wagered bet (e.g. ₹50 wager returns ₹100)!'}
           </p>
         </div>
 
         {/* Level Details */}
-        <div className="flex items-center gap-3 bg-slate-800/80 border border-slate-700/80 rounded-2xl p-2.5">
-          <img
-            src={level.imageUrl}
-            alt={level.titleHi}
-            className="w-12 h-12 rounded-xl object-cover border border-slate-600 shadow"
-            onError={(e) => {
-              (e.target as HTMLImageElement).src =
-                'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="60" height="60"><rect width="60" height="60" fill="%23334155"/></svg>';
-            }}
-          />
+        <div className="flex items-center gap-3 bg-slate-800/80 border border-amber-500/30 rounded-2xl p-2.5">
+          <div className="w-12 h-12 rounded-xl bg-gradient-to-tr from-amber-500 to-yellow-400 text-slate-950 flex flex-col items-center justify-center font-black shadow">
+            <span className="text-[10px] leading-tight font-extrabold uppercase">LEVEL</span>
+            <span className="text-base font-black leading-none">{level.id}</span>
+          </div>
           <div>
-            <div className="text-xs font-semibold text-white truncate max-w-[150px]">
-              {isHi ? level.titleHi : level.titleEn}
+            <div className="text-xs font-bold text-white truncate max-w-[180px]">
+              {isHi ? level.question.categoryHi : level.question.categoryEn}
             </div>
-            <div className="text-[11px] text-amber-400 font-medium">
-              {isHi ? level.difficultyHi : level.difficultyEn}
+            <div className="text-[11px] text-amber-400 font-semibold flex items-center gap-1">
+              <span>{isHi ? 'पड़ाव ईनाम:' : 'Milestone:'}</span>
+              <span className="px-1.5 py-0.2 rounded bg-amber-500/20 text-amber-300 font-mono text-[10px] border border-amber-500/30">
+                {level.prizeTag}
+              </span>
+            </div>
+            <div className="text-[9px] text-emerald-400 font-semibold flex items-center gap-1 mt-0.5">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+              <span>{isHi ? '4 विकल्प • 0 पुनरावृत्ति' : '4 Options • Zero Repeats'}</span>
             </div>
           </div>
         </div>

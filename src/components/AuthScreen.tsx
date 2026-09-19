@@ -148,17 +148,18 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({
       {/* Top Bar for Language Toggle */}
       <div className="max-w-md w-full mx-auto flex items-center justify-between pb-2">
         <div className="flex items-center gap-2">
-          <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-amber-500 to-yellow-300 flex items-center justify-center shadow-md text-slate-950 font-black text-sm">
-            10X
+          <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-amber-500 to-yellow-300 flex items-center justify-center shadow-md text-slate-950 font-black text-xs">
+            KBC
           </div>
           <span className="text-xs font-bold text-amber-400">
-            {isHi ? 'चित्र पहेली' : 'Chitra Paheli'}
+            {isHi ? 'कौन बनेगा करोड़पति 100X' : 'KBC 100X Quiz'}
           </span>
         </div>
 
         <button
+          type="button"
           onClick={onLanguageToggle}
-          className="px-2.5 py-1 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-xs font-semibold text-slate-200"
+          className="px-2.5 py-1 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-xs font-semibold text-slate-200 cursor-pointer"
         >
           {isHi ? 'English' : 'हिन्दी'}
         </button>

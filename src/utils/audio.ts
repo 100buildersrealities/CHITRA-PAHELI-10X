@@ -195,6 +195,156 @@ class SoundController {
       // ignore
     }
   }
+
+  // KBC Dramatic Answer Lock Tone ("क्या इसे लॉक किया जाए?")
+  public playLockAnswer(): void {
+    const ctx = this.getContext();
+    if (!ctx) return;
+    try {
+      const chord = [220, 277.18, 329.63, 440]; // A major suspense chord
+      chord.forEach((freq) => {
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = 'sawtooth';
+        osc.frequency.setValueAtTime(freq, ctx.currentTime);
+
+        gain.gain.setValueAtTime(0.08, ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.6);
+
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.start();
+        osc.stop(ctx.currentTime + 0.6);
+      });
+    } catch {
+      // ignore
+    }
+  }
+
+  // KBC Suspense Tension Tone
+  public playSuspense(): void {
+    const ctx = this.getContext();
+    if (!ctx) return;
+    try {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = 'triangle';
+      osc.frequency.setValueAtTime(110, ctx.currentTime); // Low tension bass pulse
+      osc.frequency.exponentialRampToValueAtTime(130, ctx.currentTime + 0.4);
+
+      gain.gain.setValueAtTime(0.18, ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.4);
+
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start();
+      osc.stop(ctx.currentTime + 0.4);
+    } catch {
+      // ignore
+    }
+  }
+
+  // KBC Correct Answer Fanfare ("सही जवाब!")
+  public playCorrectKbc(): void {
+    const ctx = this.getContext();
+    if (!ctx) return;
+    try {
+      // Grand triumphant triad arpeggio
+      const notes = [440, 554.37, 659.25, 880, 1108.73];
+      notes.forEach((freq, idx) => {
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(freq, ctx.currentTime + idx * 0.08);
+
+        const startTime = ctx.currentTime + idx * 0.08;
+        gain.gain.setValueAtTime(0.18, startTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, startTime + 0.45);
+
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.start(startTime);
+        osc.stop(startTime + 0.45);
+      });
+    } catch {
+      // ignore
+    }
+  }
+
+  // KBC Wrong Answer Buzzer ("गलत जवाब")
+  public playWrongKbc(): void {
+    const ctx = this.getContext();
+    if (!ctx) return;
+    try {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = 'sawtooth';
+      osc.frequency.setValueAtTime(160, ctx.currentTime);
+      osc.frequency.setValueAtTime(130, ctx.currentTime + 0.2);
+
+      gain.gain.setValueAtTime(0.2, ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.5);
+
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start();
+      osc.stop(ctx.currentTime + 0.5);
+    } catch {
+      // ignore
+    }
+  }
+
+  // KBC Lifeline Used (50:50, Audience Poll, Expert Hint, Flip)
+  public playLifeline(): void {
+    const ctx = this.getContext();
+    if (!ctx) return;
+    try {
+      const notes = [659.25, 783.99, 987.77, 1318.51];
+      notes.forEach((freq, idx) => {
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(freq, ctx.currentTime + idx * 0.06);
+
+        const startTime = ctx.currentTime + idx * 0.06;
+        gain.gain.setValueAtTime(0.12, startTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, startTime + 0.25);
+
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.start(startTime);
+        osc.stop(startTime + 0.25);
+      });
+    } catch {
+      // ignore
+    }
+  }
+
+  // PhonePe / GPay Withdrawal Cash Chime
+  public playWithdrawalSuccess(): void {
+    const ctx = this.getContext();
+    if (!ctx) return;
+    try {
+      const notes = [523.25, 659.25, 783.99, 1046.5];
+      notes.forEach((freq, idx) => {
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(freq, ctx.currentTime + idx * 0.07);
+
+        const startTime = ctx.currentTime + idx * 0.07;
+        gain.gain.setValueAtTime(0.18, startTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, startTime + 0.35);
+
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.start(startTime);
+        osc.stop(startTime + 0.35);
+      });
+    } catch {
+      // ignore
+    }
+  }
 }
 
 export const sound = new SoundController();

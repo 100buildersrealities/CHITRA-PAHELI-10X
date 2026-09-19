@@ -1,6 +1,6 @@
 {
-  "name": "Chitra Paheli 10X - 30s Puzzle Challenge",
-  "description": "30 सेकंड के भीतर चित्र सही करने पर लगाई गई शर्त का सीधा 2 गुना जीतें, 100 क्रमिक लेवल पार करें और कंफेटी/सिक्कों की बारिश का आनंद लें!",
+  "name": "KBC 10X - Kaun Banega Crorepati Quiz",
+  "description": "कौन बनेगा करोड़पति स्टाइल क्विज़ गेम - 30 सेकंड में 4 विकल्पों में से सही उत्तर चुनकर शर्त का 2 गुना जीतें, 100 क्रमिक लेवल और लाइफलाइन्स!",
   "requestFramePermissions": [],
   "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
 }

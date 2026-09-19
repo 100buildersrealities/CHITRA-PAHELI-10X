@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { AlertOctagon, RotateCcw, ArrowLeft, ShieldCheck } from 'lucide-react';
+import { AlertOctagon, RotateCcw, ArrowLeft, ShieldCheck, XCircle } from 'lucide-react';
 import { Language, LevelConfig } from '../types';
 import { sound } from '../utils/audio';
 
@@ -7,6 +7,7 @@ interface GameOverModalProps {
   bet: number;
   walletBalance: number;
   level: LevelConfig;
+  reason?: 'wrong' | 'timeout';
   onRetry: () => void;
   onBackToBetting: () => void;
   onOpenDeposit: () => void;
@@ -18,6 +19,7 @@ export const GameOverModal: React.FC<GameOverModalProps> = ({
   bet,
   walletBalance,
   level,
+  reason = 'timeout',
   onRetry,
   onBackToBetting,
   onOpenDeposit,
@@ -30,7 +32,7 @@ export const GameOverModal: React.FC<GameOverModalProps> = ({
     sound.playLoss();
   }, []);
 
-  const isBroke = walletBalance < 10;
+  const isWrong = reason === 'wrong';
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md animate-in fade-in duration-300">
@@ -42,16 +44,26 @@ export const GameOverModal: React.FC<GameOverModalProps> = ({
 
         {/* Big Alert Icon */}
         <div className="mx-auto w-16 h-16 mb-4 rounded-2xl bg-red-500/20 border border-red-500/40 flex items-center justify-center text-red-400">
-          <AlertOctagon className="w-8 h-8" />
+          {isWrong ? <XCircle className="w-8 h-8" /> : <AlertOctagon className="w-8 h-8" />}
         </div>
 
         <h3 className="text-2xl sm:text-3xl font-black text-white tracking-tight">
-          {isHi ? 'समय समाप्त! (Time Out)' : 'Time Expired!'}
+          {isWrong
+            ? isHi
+              ? 'गलत उत्तर! (Wrong Answer)'
+              : 'Wrong Answer!'
+            : isHi
+            ? 'समय समाप्त! (Time Out)'
+            : 'Time Expired!'}
         </h3>
         <p className="text-xs text-slate-400 mt-1">
-          {isHi
-            ? '30 सेकंड का समय समाप्त हो गया और चित्र अधूरा रह गया।'
-            : 'The 30-second clock reached zero before completing the puzzle.'}
+          {isWrong
+            ? isHi
+              ? `कंप्यूटर जी ने इस उत्तर को अमान्य घोषित किया। सही उत्तर था: "${level.question.optionsHi[level.question.correctIndex]}"`
+              : `Incorrect choice. The correct answer was: "${level.question.optionsEn[level.question.correctIndex]}"`
+            : isHi
+            ? '30 सेकंड की टिक-टिक घड़ी समाप्त हो गई और उत्तर नहीं दिया गया।'
+            : 'The 30-second hotseat clock reached zero before answering.'}
         </p>
 
         {/* Bet lost details */}
@@ -99,8 +111,8 @@ export const GameOverModal: React.FC<GameOverModalProps> = ({
               <RotateCcw className="w-4 h-4" />
               <span>
                 {isHi
-                  ? `फिर से खेलें (₹${bet} शर्त - 2X जीतें)`
-                  : `Try Again (Bet ₹${bet} - Win 2X)`}
+                  ? `नया सवाल खेलें (₹${bet} शर्त - 2X जीतें)`
+                  : `Try New Question (Bet ₹${bet} - Win 2X)`}
               </span>
             </button>
           ) : (
@@ -126,7 +138,7 @@ export const GameOverModal: React.FC<GameOverModalProps> = ({
             className="w-full py-3 px-4 rounded-2xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-300 font-bold text-xs uppercase tracking-wider flex items-center justify-center gap-2 transition-colors cursor-pointer"
           >
             <ArrowLeft className="w-4 h-4" />
-            <span>{isHi ? 'शर्त राशि बदलें / नया गेम' : 'Change Bet / New Game'}</span>
+            <span>{isHi ? 'शर्त राशि बदलें / मुख्य स्क्रीन' : 'Change Bet / Main Screen'}</span>
           </button>
         </div>
       </div>

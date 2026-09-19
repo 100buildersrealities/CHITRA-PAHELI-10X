@@ -1,6 +1,6 @@
 import React, { useEffect } from 'react';
 import confetti from 'canvas-confetti';
-import { Trophy, Sparkles, ArrowRight, RotateCcw, Clock, Award, Coins, CheckCircle2 } from 'lucide-react';
+import { Trophy, Sparkles, ArrowRight, RotateCcw, Clock, Award, Coins, CheckCircle2, Zap } from 'lucide-react';
 import { Language, LevelConfig } from '../types';
 import { sound } from '../utils/audio';
 import { CoinShower } from './CoinShower';
@@ -12,6 +12,7 @@ interface WinModalProps {
   hasNextLevel: boolean;
   onNextLevel: () => void;
   onReplay: () => void;
+  onOpenWithdraw?: () => void;
   language: Language;
 }
 
@@ -22,6 +23,7 @@ export const WinModal: React.FC<WinModalProps> = ({
   hasNextLevel,
   onNextLevel,
   onReplay,
+  onOpenWithdraw,
   language,
 }) => {
   const isHi = language === 'hi';
@@ -88,19 +90,19 @@ export const WinModal: React.FC<WinModalProps> = ({
           </div>
         </div>
 
-        {/* 2X Multiplier Badge */}
+        {/* Milestone Prize Tag */}
         <div className="inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/40 text-xs font-bold mb-2">
           <Sparkles className="w-3.5 h-3.5 text-amber-400" />
-          <span>{isHi ? '30 सेकंड्स में जीत! सीधा 2 गुना ईनाम' : 'Fast Solve in 30s! 2X Multiplier Win'}</span>
+          <span>{isHi ? `पड़ाव ईनाम: ${level.prizeTag}` : `Milestone Prize: ${level.prizeTag}`}</span>
         </div>
 
         <h3 className="text-2xl sm:text-3xl font-black text-white tracking-tight">
-          {isHi ? 'बधाई हो! चित्र सही हो गया!' : 'Puzzle Solved in Time!'}
+          {isHi ? 'बिल्कुल सही जवाब!' : 'Correct Answer!'}
         </h3>
         <p className="text-xs text-slate-300 mt-1">
           {isHi
-            ? `आपने केवल ${timeTaken.toFixed(1)} सेकंड में चित्र पूरा कर दिया!`
-            : `Completed within ${timeTaken.toFixed(1)} seconds!`}
+            ? `कंप्यूटर जी ने आपके उत्तर को लॉक किया और आपने ${timeTaken.toFixed(1)} सेकंड में जीत हासिल की!`
+            : `Locked and verified! Answered in ${timeTaken.toFixed(1)} seconds!`}
         </p>
 
         {/* 2X Payout showcase */}
@@ -116,7 +118,7 @@ export const WinModal: React.FC<WinModalProps> = ({
 
           <div className="mt-1 text-[11px] text-amber-200/90 font-medium">
             {isHi
-              ? `(₹${bet} लगाने पर सीधा ₹${payout} वॉलेट में जुड़ा)`
+              ? `(₹${bet} शर्त ➔ सीधा ₹${payout} वॉलेट में जुड़ा)`
               : `(Wagered ₹${bet} ➔ ₹${payout} added to your wallet)`}
           </div>
 
@@ -139,11 +141,21 @@ export const WinModal: React.FC<WinModalProps> = ({
           </div>
         </div>
 
-        {/* Coin & Confetti celebration note */}
-        <div className="mb-4 flex items-center justify-center gap-2 text-[11px] text-emerald-400 bg-emerald-950/40 border border-emerald-500/30 rounded-xl py-1.5 px-3">
-          <CheckCircle2 className="w-3.5 h-3.5 shrink-0" />
-          <span>{isHi ? 'सिक्कों और कंफेटी की बारिश जारी है!' : 'Celebratory coin & confetti rain active!'}</span>
-        </div>
+        {/* Withdraw winnings quick callout */}
+        {onOpenWithdraw && (
+          <button
+            type="button"
+            onClick={onOpenWithdraw}
+            className="w-full mb-3 py-2 px-3 rounded-xl bg-emerald-950/60 hover:bg-emerald-900/60 border border-emerald-500/40 text-emerald-300 text-xs font-bold flex items-center justify-center gap-1.5 transition-all cursor-pointer"
+          >
+            <Zap className="w-3.5 h-3.5 text-emerald-400" />
+            <span>
+              {isHi
+                ? 'जीते हुए पैसे PhonePe / GPay में तुरंत निकालें'
+                : 'Withdraw winnings via PhonePe / GPay now'}
+            </span>
+          </button>
+        )}
 
         {/* Action buttons */}
         <div className="flex flex-col gap-2.5">
@@ -154,7 +166,7 @@ export const WinModal: React.FC<WinModalProps> = ({
               onClick={onNextLevel}
               className="w-full py-3.5 px-5 rounded-2xl bg-gradient-to-r from-amber-500 to-yellow-400 hover:from-amber-400 hover:to-yellow-300 text-slate-950 font-black text-sm uppercase tracking-wider flex items-center justify-center gap-2 shadow-lg shadow-amber-500/30 transition-all cursor-pointer"
             >
-              <span>{isHi ? 'अगले लेवल पर जाएं' : 'Proceed to Next Level'}</span>
+              <span>{isHi ? `अगला सवाल (लेवल ${level.id + 1})` : `Next Question (Level ${level.id + 1})`}</span>
               <ArrowRight className="w-4 h-4" />
             </button>
           ) : (
@@ -162,8 +174,8 @@ export const WinModal: React.FC<WinModalProps> = ({
               <Award className="w-5 h-5 text-amber-400" />
               <span>
                 {isHi
-                  ? 'अद्भुत! आपने सभी 100 लेवल पूरे कर लिए हैं! आप ग्रैंड चैंपियन हैं!'
-                  : 'Grand Champion! You have conquered all 100 levels!'}
+                  ? 'अद्भुत! आपने सभी 100 स्तर सफलतापूर्वक पार कर लिए हैं! आप 7 करोड़ के महा-विजेता हैं!'
+                  : 'Grand Champion! You completed all 100 questions! ₹7 Crore winner!'}
               </span>
             </div>
           )}
@@ -175,7 +187,7 @@ export const WinModal: React.FC<WinModalProps> = ({
             className="w-full py-3 px-4 rounded-2xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200 font-bold text-xs uppercase tracking-wider flex items-center justify-center gap-2 transition-colors cursor-pointer"
           >
             <RotateCcw className="w-4 h-4" />
-            <span>{isHi ? 'यह लेवल दोबारा खेलें' : 'Play This Level Again'}</span>
+            <span>{isHi ? 'यह सवाल दोबारा खेलें' : 'Play This Question Again'}</span>
           </button>
         </div>
       </div>

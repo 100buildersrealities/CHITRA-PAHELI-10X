@@ -1,25 +1,23 @@
-import React, { useRef, useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import {
   Lock,
   CheckCircle2,
-  Upload,
-  Image as ImageIcon,
   Sparkles,
   Trophy,
   Search,
-  ChevronRight,
-  Flame,
-  Check
+  Check,
+  RotateCcw,
+  Award,
+  HelpCircle,
 } from 'lucide-react';
 import { LevelConfig, Language } from '../types';
-import { createFallbackPatternSvg } from '../utils/levels';
 
 interface LevelSelectorProps {
   levels: LevelConfig[];
   currentLevelIndex: number;
   highestUnlockedLevel: number;
   onSelectLevel: (index: number) => void;
-  onCustomImageUpload: (dataUrl: string) => void;
+  onRefreshUniqueLevels?: () => void;
   language: Language;
 }
 
@@ -39,40 +37,40 @@ const LEVEL_GROUPS: LevelGroup[] = [
     key: '1-20',
     labelHi: '1 - 20',
     labelEn: '1 - 20',
-    subHi: 'सरल (2x2 व 3x3)',
-    subEn: 'Easy (2x2 & 3x3)',
+    subHi: 'प्रारंभिक पड़ाव (₹1K - ₹3.2L)',
+    subEn: 'Beginner (₹1K - ₹3.2L)',
     range: [0, 19],
   },
   {
     key: '21-40',
     labelHi: '21 - 40',
     labelEn: '21 - 40',
-    subHi: 'मध्यम (3x3 विश्व अजूबे)',
-    subEn: 'Medium (3x3 Wonders)',
+    subHi: 'मध्यम पड़ाव (₹6.4L - ₹25L)',
+    subEn: 'Intermediate (₹6.4L - ₹25L)',
     range: [20, 39],
   },
   {
     key: '41-60',
     labelHi: '41 - 60',
     labelEn: '41 - 60',
-    subHi: 'कठिन (4x4 प्रकृति व कारें)',
-    subEn: 'Hard (4x4 Nature & Cars)',
+    subHi: 'कठिन पड़ाव (₹50L - ₹1Cr)',
+    subEn: 'Advanced (₹50L - ₹1Cr)',
     range: [40, 59],
   },
   {
     key: '61-80',
     labelHi: '61 - 80',
     labelEn: '61 - 80',
-    subHi: 'मास्टर (4x4 व 5x5 अंतरिक्ष)',
-    subEn: 'Master (4x4 & 5x5 Space)',
+    subHi: 'मास्टर पड़ाव (₹2Cr - ₹4Cr)',
+    subEn: 'Master (₹2Cr - ₹4Cr)',
     range: [60, 79],
   },
   {
     key: '81-100',
     labelHi: '81 - 100',
     labelEn: '81 - 100',
-    subHi: 'ग्रैंडमास्टर (5x5 फिनाले)',
-    subEn: 'Grandmaster (5x5 Finale)',
+    subHi: 'ग्रैंडमास्टर 7 करोड़ फिनाले',
+    subEn: 'Grandmaster ₹7 Cr Finale',
     range: [80, 99],
   },
   {
@@ -90,11 +88,10 @@ export const LevelSelector: React.FC<LevelSelectorProps> = ({
   currentLevelIndex,
   highestUnlockedLevel,
   onSelectLevel,
-  onCustomImageUpload,
+  onRefreshUniqueLevels,
   language,
 }) => {
   const isHi = language === 'hi';
-  const fileInputRef = useRef<HTMLInputElement>(null);
   const [searchQuery, setSearchQuery] = useState('');
 
   // Auto-detect which group the current level belongs to
@@ -119,20 +116,6 @@ export const LevelSelector: React.FC<LevelSelectorProps> = ({
     }
   }, [currentLevelIndex]);
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    const reader = new FileReader();
-    reader.onload = (event) => {
-      const result = event.target?.result as string;
-      if (result) {
-        onCustomImageUpload(result);
-      }
-    };
-    reader.readAsDataURL(file);
-  };
-
   const jumpToCurrentLevel = () => {
     if (currentLevelIndex < 20) setActiveGroup('1-20');
     else if (currentLevelIndex < 40) setActiveGroup('21-40');
@@ -151,11 +134,13 @@ export const LevelSelector: React.FC<LevelSelectorProps> = ({
       .filter(({ lvl, index }) => {
         if (searchQuery.trim()) {
           const q = searchQuery.toLowerCase().trim();
-          const matchesTitleHi = lvl.titleHi.toLowerCase().includes(q);
-          const matchesTitleEn = lvl.titleEn.toLowerCase().includes(q);
-          const matchesCat = lvl.categoryHi.toLowerCase().includes(q) || lvl.categoryEn.toLowerCase().includes(q);
+          const matchesQuestionHi = lvl.question.questionHi.toLowerCase().includes(q);
+          const matchesQuestionEn = lvl.question.questionEn.toLowerCase().includes(q);
+          const matchesCat =
+            lvl.question.categoryHi.toLowerCase().includes(q) ||
+            lvl.question.categoryEn.toLowerCase().includes(q);
           const matchesNum = `l${index + 1}`.includes(q) || `${index + 1}` === q;
-          return matchesTitleHi || matchesTitleEn || matchesCat || matchesNum;
+          return matchesQuestionHi || matchesQuestionEn || matchesCat || matchesNum;
         }
         return index >= start && index <= end;
       });
@@ -164,8 +149,8 @@ export const LevelSelector: React.FC<LevelSelectorProps> = ({
   const progressPercent = Math.min(100, Math.round(((highestUnlockedLevel + 1) / levels.length) * 100));
 
   return (
-    <div className="w-full bg-slate-900/80 border border-slate-800 rounded-3xl p-4 sm:p-5 shadow-xl">
-      {/* Header with Title, Progress, and Custom Upload */}
+    <div className="w-full bg-slate-900/85 border border-amber-500/30 rounded-3xl p-4 sm:p-5 shadow-xl">
+      {/* Header with Title and Progress */}
       <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 pb-4 border-b border-slate-800/80">
         <div>
           <div className="flex items-center gap-2">
@@ -173,46 +158,47 @@ export const LevelSelector: React.FC<LevelSelectorProps> = ({
               <Trophy className="w-4 h-4" />
             </div>
             <h3 className="text-base font-bold text-white flex items-center gap-2">
-              <span>{isHi ? '100 क्रमिक लेवल्स (चैलेंज)' : '100 Progressive Levels'}</span>
+              <span>{isHi ? 'KBC 100 स्तरों का सफर (1 से 100 सवाल)' : 'KBC 100 Levels Hotseat'}</span>
               <span className="text-[10px] uppercase font-bold px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/30">
-                {isHi ? 'लेवल 1 से 100' : 'Lv 1 - 100'}
+                ₹1,000 ➔ ₹7 करोड़
               </span>
             </h3>
           </div>
-          <p className="text-xs text-slate-400 mt-1">
-            {isHi
-              ? '2x2 (4 टुकड़े) से 3x3, 4x4 और 5x5 (25 टुकड़े + ↺ रोटेशन) तक क्रमिक कठिनाई'
-              : 'Progressive difficulty from 2x2 (4 pcs) to 3x3, 4x4, and 5x5 (25 pcs + ↺ rotation)'}
-          </p>
+          <div className="flex flex-wrap items-center gap-2 mt-1">
+            <p className="text-xs text-slate-400">
+              {isHi
+                ? 'लेवल 1 से 100 तक क्रमिक कठिनाई के सवाल • कोई सवाल दुबारा नहीं आता'
+                : '100 progressive difficulty questions • Zero repeated questions per player'}
+            </p>
+            <span className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-300 border border-emerald-500/30">
+              <Sparkles className="w-2.5 h-2.5 text-emerald-400" />
+              <span>{isHi ? '100% नए सवाल • 0 पुनरावृत्ति' : '100% Unique Questions • Zero Repeats'}</span>
+            </span>
+          </div>
         </div>
 
-        {/* Action Controls: Jump to current level & Custom Photo */}
-        <div className="flex items-center gap-2">
+        {/* Action Controls */}
+        <div className="flex flex-wrap items-center gap-2">
+          {onRefreshUniqueLevels && (
+            <button
+              type="button"
+              onClick={onRefreshUniqueLevels}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-500/15 hover:bg-emerald-500/25 border border-emerald-500/40 text-xs font-bold text-emerald-300 transition-colors cursor-pointer"
+              title={isHi ? '100 नए बिना दोहराव वाले सवाल लोड करें' : 'Load 100 Fresh Non-Repeating Questions'}
+            >
+              <RotateCcw className="w-3.5 h-3.5 text-emerald-400" />
+              <span>{isHi ? 'नए 100 सवाल' : 'Fresh 100 Questions'}</span>
+            </button>
+          )}
+
           <button
             type="button"
             onClick={jumpToCurrentLevel}
             className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-amber-500/15 hover:bg-amber-500/25 border border-amber-500/40 text-xs font-bold text-amber-300 transition-colors cursor-pointer"
-            title={isHi ? 'वर्तमान स्तर पर जाएं' : 'Jump to Current Level'}
+            title={isHi ? 'वर्तमान सवाल पर जाएं' : 'Jump to Current Question'}
           >
             <Sparkles className="w-3.5 h-3.5 text-amber-400" />
-            <span>{isHi ? `चालू लेवल (L${currentLevelIndex + 1})` : `Active (L${currentLevelIndex + 1})`}</span>
-          </button>
-
-          <input
-            type="file"
-            ref={fileInputRef}
-            onChange={handleFileChange}
-            accept="image/*"
-            className="hidden"
-          />
-          <button
-            type="button"
-            onClick={() => fileInputRef.current?.click()}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-xs font-semibold text-slate-200 hover:text-white transition-colors cursor-pointer"
-            title={isHi ? 'अपनी तस्वीर अपलोड करें' : 'Upload Your Own Photo'}
-          >
-            <Upload className="w-3.5 h-3.5 text-amber-400" />
-            <span>{isHi ? 'फोटो अपलोड' : 'Upload Photo'}</span>
+            <span>{isHi ? `सक्रिय सवाल (L${currentLevelIndex + 1})` : `Active (L${currentLevelIndex + 1})`}</span>
           </button>
         </div>
       </div>
@@ -221,10 +207,10 @@ export const LevelSelector: React.FC<LevelSelectorProps> = ({
       <div className="my-3 p-3 rounded-2xl bg-slate-950/60 border border-slate-800/80 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
         <div className="flex items-center gap-2">
           <span className="text-xs font-semibold text-slate-300">
-            {isHi ? 'कुल प्रगति:' : 'Overall Progress:'}
+            {isHi ? 'हॉटसीट प्रगति:' : 'Hotseat Progress:'}
           </span>
           <span className="text-xs font-mono font-bold text-amber-400">
-            {highestUnlockedLevel + 1} / {levels.length} {isHi ? 'लेवल्स अनलॉक' : 'Unlocked'}
+            {highestUnlockedLevel + 1} / {levels.length} {isHi ? 'सवाल अनलॉक' : 'Unlocked'}
           </span>
           <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-300 border border-amber-500/30">
             {progressPercent}%
@@ -282,7 +268,7 @@ export const LevelSelector: React.FC<LevelSelectorProps> = ({
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder={isHi ? 'लेवल खोजें (उदा. 50, मोर, ताजमहल)...' : 'Search level (e.g. 50, Tiger)...'}
+            placeholder={isHi ? 'सवाल खोजें (उदा. 50, संविधान, इसरो)...' : 'Search question (e.g. 50, ISRO)...'}
             className="w-full pl-8 pr-3 py-1.5 bg-slate-950 border border-slate-700/80 rounded-xl text-xs text-white placeholder-slate-500 focus:outline-none focus:border-amber-500 transition-colors"
           />
           {searchQuery && (
@@ -300,7 +286,7 @@ export const LevelSelector: React.FC<LevelSelectorProps> = ({
       {/* Grid of Displayed Levels */}
       {displayedLevels.length === 0 ? (
         <div className="py-12 text-center text-slate-400 text-xs">
-          {isHi ? 'कोई लेवल नहीं मिला' : 'No matching level found'}
+          {isHi ? 'कोई सवाल नहीं मिला' : 'No matching question found'}
         </div>
       ) : (
         <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-7 xl:grid-cols-10 gap-2.5 max-h-[460px] overflow-y-auto pr-1">
@@ -315,64 +301,38 @@ export const LevelSelector: React.FC<LevelSelectorProps> = ({
                 type="button"
                 disabled={!isUnlocked}
                 onClick={() => onSelectLevel(index)}
-                className={`relative p-2 rounded-2xl border text-left flex flex-col items-center justify-between transition-all duration-200 overflow-hidden group ${
+                className={`relative p-2.5 rounded-2xl border text-left flex flex-col items-center justify-between transition-all duration-200 overflow-hidden group min-h-[110px] ${
                   isSelected
-                    ? 'bg-amber-500/20 border-amber-400 ring-2 ring-amber-400 shadow-xl shadow-amber-500/20 scale-[1.02]'
+                    ? 'bg-amber-500/25 border-amber-400 ring-2 ring-amber-400 shadow-xl shadow-amber-500/20 scale-[1.02]'
                     : isUnlocked
-                    ? 'bg-slate-850 bg-slate-800/80 hover:bg-slate-700/90 border-slate-700/80 hover:border-amber-500/40 cursor-pointer'
-                    : 'bg-slate-900/40 border-slate-800/60 opacity-40 cursor-not-allowed'
+                    ? 'bg-slate-800/85 hover:bg-slate-750 border-slate-700/80 hover:border-amber-500/40 cursor-pointer'
+                    : 'bg-slate-950/40 border-slate-800/50 opacity-40 cursor-not-allowed'
                 }`}
               >
-                {/* Thumbnail Image */}
-                <div className="relative w-full aspect-square rounded-xl overflow-hidden mb-1.5 bg-slate-950">
-                  <img
-                    src={lvl.imageUrl}
-                    alt={isHi ? lvl.titleHi : lvl.titleEn}
-                    className={`w-full h-full object-cover transition-transform duration-300 group-hover:scale-105 ${
-                      !isUnlocked ? 'grayscale blur-[1px]' : ''
-                    }`}
-                    onError={(e) => {
-                      (e.target as HTMLImageElement).src = createFallbackPatternSvg(
-                        `Level ${index + 1}`
-                      );
-                    }}
-                  />
-
-                  {/* Locked Overlay */}
-                  {!isUnlocked && (
-                    <div className="absolute inset-0 bg-black/60 backdrop-blur-[1px] flex items-center justify-center text-slate-400">
-                      <Lock className="w-4 h-4 text-slate-400" />
-                    </div>
-                  )}
-
-                  {/* Completed Checkmark */}
-                  {isCompleted && (
-                    <div className="absolute top-1 right-1 w-4 h-4 rounded-full bg-emerald-500 text-slate-950 flex items-center justify-center shadow-md">
-                      <Check className="w-3 h-3 stroke-[3]" />
-                    </div>
-                  )}
-
-                  {/* Grid Badge overlay */}
-                  <div className="absolute bottom-1 left-1 px-1.5 py-0.5 rounded-md bg-slate-950/80 backdrop-blur-xs text-[9px] font-mono font-bold text-amber-300 border border-amber-500/30">
-                    {lvl.gridSize}x{lvl.gridSize}
-                  </div>
-
-                  {/* Rotation Indicator */}
-                  {lvl.hasRotation && (
-                    <div className="absolute bottom-1 right-1 px-1 py-0.5 rounded-md bg-rose-500/80 backdrop-blur-xs text-[9px] font-bold text-white shadow">
-                      ↺
-                    </div>
-                  )}
+                {/* Level Tag & Prize Badge */}
+                <div className="w-full flex items-center justify-between mb-1">
+                  <span className="font-mono text-xs font-black text-amber-400">
+                    L{index + 1}
+                  </span>
+                  <span className="text-[9px] font-mono font-bold px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-300 border border-amber-500/30">
+                    {lvl.prizeTag}
+                  </span>
                 </div>
 
-                {/* Level Title & Details */}
-                <div className="w-full text-center">
-                  <div className="text-[11px] font-bold text-white truncate" title={isHi ? lvl.titleHi : lvl.titleEn}>
-                    L{index + 1}: {isHi ? lvl.titleHi.split('(')[0].trim() : lvl.titleEn}
+                {/* Level Icon / Category */}
+                <div className="my-1 text-center w-full">
+                  <div className="w-8 h-8 mx-auto rounded-xl bg-slate-900 border border-slate-700 flex items-center justify-center text-amber-400 group-hover:scale-110 transition-transform">
+                    {isCompleted ? (
+                      <Check className="w-4 h-4 text-emerald-400 stroke-[3]" />
+                    ) : isUnlocked ? (
+                      <HelpCircle className="w-4 h-4 text-amber-400" />
+                    ) : (
+                      <Lock className="w-3.5 h-3.5 text-slate-500" />
+                    )}
                   </div>
-                  <div className="text-[9px] text-slate-400 truncate">
-                    {isHi ? lvl.categoryHi : lvl.categoryEn}
-                  </div>
+                  <span className="block text-[10px] font-bold text-slate-200 mt-1 truncate max-w-full">
+                    {isHi ? lvl.question.categoryHi : lvl.question.categoryEn}
+                  </span>
                 </div>
 
                 {/* Status indicator */}
