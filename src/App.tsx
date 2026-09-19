@@ -48,7 +48,22 @@ export default function App() {
     const saved = localStorage.getItem(STORAGE_KEY_USERS) || localStorage.getItem(LEGACY_STORAGE_KEY_USERS);
     if (saved) {
       try {
-        return JSON.parse(saved);
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed)) {
+          return parsed.map((u: UserAccount) => {
+            const hasValidLevels =
+              Array.isArray(u.activeLevels) &&
+              u.activeLevels.length === 100 &&
+              u.activeLevels.every((l) => Boolean(l && l.question && l.question.categoryHi));
+            if (!hasValidLevels) {
+              return {
+                ...u,
+                activeLevels: generateUnique100Levels(u.seenQuestionIds || []),
+              };
+            }
+            return u;
+          });
+        }
       } catch {
         // fallback
       }
@@ -61,7 +76,17 @@ export default function App() {
       localStorage.getItem(STORAGE_KEY_ACTIVE_USER) || localStorage.getItem(LEGACY_STORAGE_KEY_ACTIVE_USER);
     if (saved) {
       try {
-        return JSON.parse(saved);
+        const parsed = JSON.parse(saved);
+        if (parsed && typeof parsed === 'object') {
+          const hasValidLevels =
+            Array.isArray(parsed.activeLevels) &&
+            parsed.activeLevels.length === 100 &&
+            parsed.activeLevels.every((l: LevelConfig) => Boolean(l && l.question && l.question.categoryHi));
+          if (!hasValidLevels) {
+            parsed.activeLevels = generateUnique100Levels(parsed.seenQuestionIds || []);
+          }
+          return parsed;
+        }
       } catch {
         // fallback
       }
@@ -82,14 +107,23 @@ export default function App() {
 
   // Dynamic 100 Progressive Levels (always 100% unique KBC questions across all 100 levels)
   const [levels, setLevels] = useState<LevelConfig[]>(() => {
-    if (currentUser?.activeLevels && currentUser.activeLevels.length === 100) {
+    if (
+      currentUser?.activeLevels &&
+      currentUser.activeLevels.length === 100 &&
+      currentUser.activeLevels.every((l) => Boolean(l && l.question && l.question.categoryHi))
+    ) {
       return currentUser.activeLevels;
     }
     return generateUnique100Levels(currentUser?.seenQuestionIds || []);
   });
 
-  // Active level config
-  const activeLevel: LevelConfig = levels[currentLevelIndex] || levels[0] || GAME_LEVELS[0];
+  // Active level config with guaranteed fallback
+  const activeLevel: LevelConfig =
+    levels[currentLevelIndex]?.question
+      ? levels[currentLevelIndex]
+      : levels[0]?.question
+      ? levels[0]
+      : GAME_LEVELS[0];
 
   // Betting & Game Loop
   const [currentBet, setCurrentBet] = useState<number>(20);
@@ -514,10 +548,12 @@ export default function App() {
             <div className="flex flex-wrap items-center justify-between gap-2 px-1 text-xs text-slate-400">
               <div className="flex items-center gap-2">
                 <span className="font-bold text-white text-sm">
-                  {isHi ? activeLevel.question.categoryHi : activeLevel.question.categoryEn}
+                  {isHi
+                    ? activeLevel.question?.categoryHi || 'सामान्य ज्ञान'
+                    : activeLevel.question?.categoryEn || 'General Knowledge'}
                 </span>
                 <span className="px-2 py-0.5 rounded-full bg-slate-800 text-amber-400 font-mono font-semibold">
-                  {activeLevel.prizeTag}
+                  {activeLevel.prizeTag || '₹1,000'}
                 </span>
               </div>
 

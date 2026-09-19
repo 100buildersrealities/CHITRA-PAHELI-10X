@@ -59,8 +59,8 @@ export const GameOverModal: React.FC<GameOverModalProps> = ({
         <p className="text-xs text-slate-400 mt-1">
           {isWrong
             ? isHi
-              ? `कंप्यूटर जी ने इस उत्तर को अमान्य घोषित किया। सही उत्तर था: "${level.question.optionsHi[level.question.correctIndex]}"`
-              : `Incorrect choice. The correct answer was: "${level.question.optionsEn[level.question.correctIndex]}"`
+              ? `कंप्यूटर जी ने इस उत्तर को अमान्य घोषित किया। सही उत्तर था: "${level?.question?.optionsHi?.[level?.question?.correctIndex ?? 0] || ''}"`
+              : `Incorrect choice. The correct answer was: "${level?.question?.optionsEn?.[level?.question?.correctIndex ?? 0] || ''}"`
             : isHi
             ? '30 सेकंड की टिक-टिक घड़ी समाप्त हो गई और उत्तर नहीं दिया गया।'
             : 'The 30-second hotseat clock reached zero before answering.'}

@@ -14,6 +14,7 @@ import {
 } from 'lucide-react';
 import { LevelConfig, Language, LifelineState, KbcQuestion } from '../types';
 import { sound } from '../utils/audio';
+import { GAME_LEVELS } from '../utils/kbcQuestions';
 
 interface KbcGameBoardProps {
   level: LevelConfig;
@@ -37,7 +38,7 @@ export const KbcGameBoard: React.FC<KbcGameBoardProps> = ({
   onFlipQuestion,
 }) => {
   const isHi = language === 'hi';
-  const question = level.question;
+  const question: KbcQuestion = level?.question || GAME_LEVELS[0].question;
 
   // Selection & Lock State
   const [selectedOption, setSelectedOption] = useState<number | null>(null);

@@ -93,7 +93,7 @@ export const WinModal: React.FC<WinModalProps> = ({
         {/* Milestone Prize Tag */}
         <div className="inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/40 text-xs font-bold mb-2">
           <Sparkles className="w-3.5 h-3.5 text-amber-400" />
-          <span>{isHi ? `पड़ाव ईनाम: ${level.prizeTag}` : `Milestone Prize: ${level.prizeTag}`}</span>
+          <span>{isHi ? `पड़ाव ईनाम: ${level?.prizeTag || '₹1,000'}` : `Milestone Prize: ${level?.prizeTag || '₹1,000'}`}</span>
         </div>
 
         <h3 className="text-2xl sm:text-3xl font-black text-white tracking-tight">

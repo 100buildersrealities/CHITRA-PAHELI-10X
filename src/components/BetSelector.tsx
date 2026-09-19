@@ -61,12 +61,14 @@ export const BetSelector: React.FC<BetSelectorProps> = ({
           </div>
           <div>
             <div className="text-xs font-bold text-white truncate max-w-[180px]">
-              {isHi ? level.question.categoryHi : level.question.categoryEn}
+              {isHi
+                ? level?.question?.categoryHi || 'सामान्य ज्ञान'
+                : level?.question?.categoryEn || 'General Knowledge'}
             </div>
             <div className="text-[11px] text-amber-400 font-semibold flex items-center gap-1">
               <span>{isHi ? 'पड़ाव ईनाम:' : 'Milestone:'}</span>
               <span className="px-1.5 py-0.2 rounded bg-amber-500/20 text-amber-300 font-mono text-[10px] border border-amber-500/30">
-                {level.prizeTag}
+                {level?.prizeTag || '₹1,000'}
               </span>
             </div>
             <div className="text-[9px] text-emerald-400 font-semibold flex items-center gap-1 mt-0.5">

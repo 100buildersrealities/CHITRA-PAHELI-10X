@@ -132,13 +132,14 @@ export const LevelSelector: React.FC<LevelSelectorProps> = ({
     return levels
       .map((lvl, index) => ({ lvl, index }))
       .filter(({ lvl, index }) => {
+        if (!lvl) return false;
         if (searchQuery.trim()) {
           const q = searchQuery.toLowerCase().trim();
-          const matchesQuestionHi = lvl.question.questionHi.toLowerCase().includes(q);
-          const matchesQuestionEn = lvl.question.questionEn.toLowerCase().includes(q);
+          const matchesQuestionHi = lvl.question?.questionHi?.toLowerCase().includes(q) || false;
+          const matchesQuestionEn = lvl.question?.questionEn?.toLowerCase().includes(q) || false;
           const matchesCat =
-            lvl.question.categoryHi.toLowerCase().includes(q) ||
-            lvl.question.categoryEn.toLowerCase().includes(q);
+            (lvl.question?.categoryHi?.toLowerCase().includes(q) || false) ||
+            (lvl.question?.categoryEn?.toLowerCase().includes(q) || false);
           const matchesNum = `l${index + 1}`.includes(q) || `${index + 1}` === q;
           return matchesQuestionHi || matchesQuestionEn || matchesCat || matchesNum;
         }
@@ -315,7 +316,7 @@ export const LevelSelector: React.FC<LevelSelectorProps> = ({
                     L{index + 1}
                   </span>
                   <span className="text-[9px] font-mono font-bold px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-300 border border-amber-500/30">
-                    {lvl.prizeTag}
+                    {lvl?.prizeTag || '₹1,000'}
                   </span>
                 </div>
 
@@ -331,7 +332,9 @@ export const LevelSelector: React.FC<LevelSelectorProps> = ({
                     )}
                   </div>
                   <span className="block text-[10px] font-bold text-slate-200 mt-1 truncate max-w-full">
-                    {isHi ? lvl.question.categoryHi : lvl.question.categoryEn}
+                    {isHi
+                      ? lvl.question?.categoryHi || 'सामान्य ज्ञान'
+                      : lvl.question?.categoryEn || 'General Knowledge'}
                   </span>
                 </div>
 
